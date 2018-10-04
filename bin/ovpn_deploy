@@ -1,0 +1,30 @@
+#!/bin/bash
+
+OrderNo="$1" # Identifier for cotainer and invoice
+HostIP="$2" # IP of the server running the docker host
+NoOfClients="$3" # Number of Client Files that are generated
+#Product="$4" # Type of VPN
+
+
+# Prepare configs
+docker volume create --name ovpn-data-$OrderNo
+docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm vpn ovpn_genconfig -u udp://$HostIP -t -c
+docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm -it vpn ovpn_initpki nopass
+
+# Start the VPN
+docker run -v ovpn-data-$OrderNo:/etc/openvpn -d -p 1194/udp --name $OrderNo --cap-add=NET_ADMIN vpn
+
+
+ # gets the exposed port of the specified container
+UsedPort="$(docker inspect --format="{{(index (index .NetworkSettings.Ports \"1194/udp\") 0).HostPort}}" $OrderNo)"
+
+# Retrieve Client files
+
+counter=0
+while [  $counter -lt $NoOfClients ]; do
+    let counter=counter+1 
+    echo The counter is $counter
+    docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm -it vpn easyrsa build-client-full client_$counter nopass
+    docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm vpn ovpn_getclient client_$counter > client_$counter.ovpn $UsedPort
+    
+done
