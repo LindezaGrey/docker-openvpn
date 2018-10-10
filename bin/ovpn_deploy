@@ -12,8 +12,9 @@ docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm vpn ovpn_ge
 docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm -it vpn ovpn_initpki nopass
 
 # Start the VPN and set timer
-
-(sleep $ContainerTimeout;docker stop $OrderNo >/dev/null) & docker run -v ovpn-data-$OrderNo:/etc/openvpn -d -p 1194/udp --name $OrderNo --cap-add=NET_ADMIN vpn
+# start subshell which stops container and removes volume
+(sleep $ContainerTimeout;docker stop $OrderNo >/dev/null; docker volume rm ovpn-data-$OrderNo >/dev/null) & 
+docker run -v ovpn-data-$OrderNo:/etc/openvpn -d -p 1194/udp --name $OrderNo --cap-add=NET_ADMIN --rm vpn
 
  # gets the exposed port of the specified container
 UsedPort="$(docker inspect --format="{{(index (index .NetworkSettings.Ports \"1194/udp\") 0).HostPort}}" $OrderNo)"
@@ -26,5 +27,4 @@ while [  $counter -lt $NoOfClients ]; do
     echo The counter is $counter
     docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm -it vpn easyrsa build-client-full "$OrderNo"_client_$counter nopass
     docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm vpn ovpn_getclient "$OrderNo"_client_$counter > "$OrderNo"_client_$counter.ovpn $UsedPort
-    
 done
