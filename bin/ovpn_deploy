@@ -1,9 +1,8 @@
 #!/bin/bash
 
-
 # Check if script was invoked correctly
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
-  echo 'one or more variables are undefined'
+  echo 'one or more variables are undefined. call it like: ovpn_deploy [OrderNo] [HostIP] [NoOfClients] [ContainerTimeout]'
   exit 1
 fi
 
@@ -22,9 +21,7 @@ docker volume create --name ovpn-data-$OrderNo
 docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm vpn ovpn_genconfig -u udp://$HostIP -t -c
 docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm -it vpn ovpn_initpki nopass
 
-# start subshell which stops container and removes volume
-(sleep $ContainerTimeout;docker stop $OrderNo >/dev/null; docker volume rm ovpn-data-$OrderNo >/dev/null) & 
-# Start the VPN and set timer
+# Start the VPN
 docker run -v ovpn-data-$OrderNo:/etc/openvpn -d -p 1194/udp --name $OrderNo \
 --label StartDate="$StartDate" --label DeathDate="$DeathDate" --cap-add=NET_ADMIN --rm vpn
 
