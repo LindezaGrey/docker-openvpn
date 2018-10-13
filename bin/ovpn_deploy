@@ -23,7 +23,7 @@ docker run -v ovpn-data-$OrderNo:/etc/openvpn --log-driver=none --rm -it vpn ovp
 
 # Start the VPN
 docker run -v ovpn-data-$OrderNo:/etc/openvpn -d -p 1194/udp --name $OrderNo \
---label StartDate="$StartDate" --label DeathDate="$DeathDate" --cap-add=NET_ADMIN --rm vpn
+--label StartDate="$StartDate" --label DeathDate="$DeathDate" --cap-add=NET_ADMIN --restart always vpn
 
  # gets the exposed port of the specified container
 UsedPort="$(docker inspect --format="{{(index (index .NetworkSettings.Ports \"1194/udp\") 0).HostPort}}" $OrderNo)"
