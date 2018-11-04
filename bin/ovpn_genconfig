@@ -271,6 +271,9 @@ done
 # Create ccd directory for static routes
 [ ! -d "${OPENVPN:-}/ccd" ] && mkdir -p ${OPENVPN:-}/ccd
 
+# Create client file directory 
+mkdir -p ${OPENVPN:-}/clients
+
 # Server name is in the form "udp://vpn.example.com:1194"
 if [[ "${OVPN_SERVER_URL:-}" =~ ^((udp|tcp|udp6|tcp6)://)?([0-9a-zA-Z\.\-]+)(:([0-9]+))?$ ]]; then
     OVPN_PROTO=${BASH_REMATCH[2]};
